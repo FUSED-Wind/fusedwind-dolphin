@@ -271,7 +271,8 @@ def parse_connect_args(dest_object, source_object, var_name_dest=None, var_name_
             src_name = var_name_source
             # Verify things are OK
             if not dst_name in dst_var:
-                raise Exception('That destination variable name does not exist')
+                import pdb;pdb.set_trace()
+                raise Exception('That destination variable %s name does not exist in %s'%(dst_name,dst_var))
             if not src_name in src_var:
                 raise Exception('That source variable %s  name does not exist in %s'%(src_name,src_var))
             if dst_name in dst_src_map:
@@ -1023,6 +1024,7 @@ class FUSED_Object(FUSED_Unique):
         # Return the result
         return self.output_values[key]
 
+
     # This will label all variables as remotely calculated
     def set_as_remotely_calculated(self, at_rank):
 
@@ -1292,6 +1294,7 @@ def get_object_dict_and_list(object_container):
             if hasattr(obj, 'object_name'):
                 name = obj.object_name
                 from fusedwind.fused_util import make_unique_name
+                raise Exception('LISTLISTLIST')
                 name = make_unique_name(name, object_name_set)
                 object_dictionary[name] = obj
             if is_fused_object_or_group(obj):
