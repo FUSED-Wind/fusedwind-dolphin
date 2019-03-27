@@ -99,7 +99,8 @@ class FUSED_Data_Set(object):
             #converting from hdf5 format:
             self.data[key] = {}
             self.data[key]['values'] = np.array(f['data/'+key+'/values'])
-            self.data[key]['is_set'] = np.array(f['data/'+key+'/status'])
+            self.data[key]['is_set'] = np.array(f['data/'+key+'/status']) 
+            self.collumn_list.append(key)
 
 #    def save_pickle(self,pickle_name=None):
 #        import pickle

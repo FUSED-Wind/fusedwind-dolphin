@@ -124,7 +124,79 @@ class Multi_Fidelity_Surrogate(object):
         sigma = self.cheap_GP_model.get_sigma(input)**2+self.exp_correction_GP_model.get_sigma(input)**2
         sigma = sigma**0.5
         return [prediction,sigma]
- 
+
+#Single fidelity surrogate object:
+class Single_Fidelity_Surrogate(object):
+
+    def __init__(self, input=None, output=None, dataset=None):
+        self.input = input
+        self.output = output
+
+        self.output_names = ['prediction','sigma']
+        
+        built = 'False'
+
+    def build_model(self):
+        self.linear_model = Linear_Model(self.input,self.output)
+        self.linear_model.build()
+
+        linear_prediction = self.linear_model.get_prediction(self.input)
+        linear_remainder = self.output-linear_prediction
+
+        self.GP_model = Kriging_Model(self.input,linear_remainder)
+        self.GP_model.build()
+
+        built = 'True'
+
+    def get_prediction_matrix(self,input):
+        prediction = self.linear_model.get_prediction(input)+self.GP_model.get_prediction(input)
+        return prediction
+
+    def get_prediction(self,input):
+        prediction = self.linear_model.get_prediction(input)+self.GP_model.get_prediction(input)
+        sigma = self.GP_model.get_sigma(input)
+        return [prediction,sigma]
+
+    def do_LOO(self, extra_array_input=None, extra_array_output=None):
+        error_array = do_LOO(self, extra_array_input, extra_array_output)
+        return error_array
+
+def do_LOO(self, extra_array_input=None, extra_array_output=None):
+    '''
+    This function creates a Leave One Out error calculation on the input/output data of the model.
+    The function takes an extra data array of test-cases.
+    '''
+    full_input = self.input
+    full_output = self.output  
+    error_array = []
+
+    #Doing leave one out test:
+    for ind in range(len(self.input[:,0])):
+        test_input = np.array([full_input[ind]])
+        test_output = full_output[ind]
+
+        self.input = np.delete(full_input,ind,0)
+        self.output = np.delete(full_output,ind)
+
+        self.build_model()
+        predicted_output = self.get_prediction(test_input)[0]
+
+        error_array.append(np.abs(predicted_output-test_output))
+
+    self.input = full_input
+    self.output = full_output
+    self.build_model()
+    
+    #Testing error on extra points:
+    if not extra_array_input is None:
+        for ind, test_input in enumerate(extra_array_input):
+            TI = np.array([test_input])
+            TO = extra_test_array_output[ind]
+            predicted_output = self.get_prediction(TI)[0]
+            error_array.append(np.abs(predicted_output-TO))
+
+    return np.mean(error_array)
+
 class Linear_Model(linear_model.LinearRegression):
  
     def __init__(self,input=None,output=None,linear_order=3):
